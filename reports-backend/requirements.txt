@@ -57,7 +57,40 @@ docker start CONTAINER
 docker rm CONTAINER
 docker inspect CONTAINER
 
+version: '3.8'
 
+services:
+
+  db:
+    image: mysql:5.7
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  web:
+    image: wordpress:latest
+    container_name: web-app
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: admin
+      WORDPRESS_DB_PASSWORD: admin123
+      WORDPRESS_DB_NAME: ecommerce
+    depends_on:
+      - db
+
+volumes:
+  mysql-data:
 
 Remember: down -v deletes the Compose-managed volumes too. Avoid it when demonstrating database persistence.
 Jenkins
