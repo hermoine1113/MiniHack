@@ -32,3 +32,467 @@ pipeline {
         }
     }
 }
+7. Other useful Docker commands
+docker restart mysql-db
+docker start mysql-db
+docker stop wordpress-app
+docker rm wordpress-app
+docker images
+docker rmi wordpress:latest
+docker volume inspect mysql-data
+
+
+Multiple WordPress instances:
+docker run -d --name wordpress2 --network app-network -p 8082:80 -e WORDPRESS_DB_HOST=mysql-db:3306 -e WORDPRESS_DB_USER=wpuser -e WORDPRESS_DB_PASSWORD=wp123 -e WORDPRESS_DB_NAME=wordpress wordpress:latest
+
+
+Remember: 8081:80 means host port 8081 maps to container port 80. Never remove the volume during the persistence demonstration.
+Docker Compose, Multi Containerization (2).docx
+
+Q2. Jenkins – Java Application Build and CI
+GitHub repository:
+https://github.com/kvrajanirajesh/mid2-ecommercemaven
+
+
+1. Clone repository locally (CMD)
+git clone https://github.com/kvrajanirajesh/mid2-ecommercemaven
+cd mid2-ecommercemaven
+
+
+2. Maven commands
+mvn clean
+mvn compile
+mvn test
+mvn install
+mvn package
+mvn clean install
+mvn clean package
+
+
+If the Maven project is inside a folder named mavenjava:
+mvn clean -f mavenjava
+mvn install -f mavenjava
+mvn test -f mavenjava
+mvn package -f mavenjava
+
+
+3. Jenkins configuration – GUI steps
+1. Open Jenkins: http://localhost:8080
+2. Manage Jenkins → Plugins → install:
+   - Git plugin
+   - Maven Integration plugin
+   - Pipeline plugin (for pipeline jobs)
+3. Manage Jenkins → Tools:
+   - Configure JDK.
+   - Configure Maven as MAVEN-HOME.
+4. New Item → Freestyle project.
+5. Source Code Management → Git.
+6. Repository URL → paste the GitHub repository link.
+7. Branch → */main.
+8. Build Steps → Invoke top-level Maven targets.
+9. Goals:
+clean install
+
+
+For tests and packaging separately, use:
+clean test package
+
+
+10. Post-build Actions → Archive the artifacts:
+**/target/*.war
+
+
+Or:
+**/target/*.jar
+
+
+4. Build triggers
+Poll SCM – check periodically for GitHub changes
+
+Example: every 5 minutes.
+H/5 * * * *
+
+
+Build periodically – run at a scheduled time
+
+Example: every day at 6 PM.
+0 18 * * *
+
+
+GitHub webhook – trigger when code is pushed
+- Configure the webhook in GitHub → Settings → Webhooks.
+- Enable GitHub hook trigger for GITScm polling in Jenkins.
+5. Demonstrate successful and failed builds
+git add .
+git commit -m "Update application"
+git push origin main
+
+
+To test a failed build, introduce a deliberate compilation error, commit and push it, and check the Jenkins Console Output.
+SET-1(2).docx
+
+Q3. Jenkins – Pipeline Script and GitHub Webhooks
+1. Pipeline script
+Jenkins → New Item → Pipeline → Pipeline script.
+
+Use this script for the Windows Jenkins setup in your lab:
+
+pipeline {
+    agent any
+
+    tools {
+        maven 'MAVEN-HOME'
+    }
+
+    stages {
+        stage('Git Clone and Clean') {
+            steps {
+                bat 'git clone https://github.com/kvrajanirajesh/mid2-ecommercemaven'
+                bat 'mvn clean -f mavenjava'
+            }
+        }
+
+        stage('Install') {
+            steps {
+                bat 'mvn install -f mavenjava'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn test -f mavenjava'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                bat 'mvn package -f mavenjava'
+            }
+        }
+    }
+}
+
+
+
+2. GitHub webhook using ngrok
+Install ngrok, then:
+ngrok config add-authtoken YOUR_TOKEN
+
+
+Start Jenkins tunnel:
+ngrok http 8080
+
+
+Copy the HTTPS forwarding URL displayed by ngrok.
+
+GitHub → Repository → Settings → Webhooks → Add webhook.
+
+Payload URL:
+https://YOUR-NGROK-URL/github-webhook/
+
+
+Content type:
+application/json
+
+
+Select:
+Just the push event
+
+
+In Jenkins:
+- Open Job → Configure.
+- Build Triggers.
+- Select GitHub hook trigger for GITScm polling.
+- Save.
+3. Test webhook
+git add .
+git commit -m "Webhook test"
+git push origin main
+
+
+Jenkins should automatically start a build.
+4. Other useful Git commands
+git status
+git branch
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update"
+git push origin main
+
+
+Jenkins Script and buils triggers (6).docx
+ Jenkins CICD with git Hooks (5).docx
+
+
+Q4. Kubernetes – Container Deployment and Auto Scaling
+1. Start Minikube
+minikube start --driver=docker
+minikube status
+minikube dashboard
+
+
+If kubectl is not installed separately:
+minikube kubectl -- get pods -A
+
+
+2. Create deployment with Nginx
+kubectl create deployment mynginx --image=nginx
+
+
+Set two replicas:
+kubectl scale deployment mynginx --replicas=2
+
+
+3. Check deployment and pods
+kubectl get deployments
+kubectl get pods
+kubectl describe pods
+kubectl get all
+
+
+4. Expose deployment using Service
+kubectl expose deployment mynginx --type=NodePort --port=80 --target-port=80
+
+
+Check service:
+kubectl get services
+
+
+5. Scale from 2 to 5 replicas
+kubectl scale deployment mynginx --replicas=5
+kubectl get pods
+
+
+6. Access application
+kubectl port-forward svc/mynginx 8081:80
+
+
+Open:
+http://localhost:8081
+
+
+Alternative:
+minikube service mynginx --url
+
+
+7. Demonstrate automatic pod recreation
+First list pods:
+kubectl get pods
+
+
+Delete one pod:
+kubectl delete pod POD_NAME
+
+
+Check again:
+kubectl get pods
+
+
+Kubernetes creates a replacement pod to maintain the desired replica count.
+8. Rolling update
+kubectl set image deployment/mynginx nginx=nginx:1.25
+
+
+Check rollout:
+kubectl rollout status deployment/mynginx
+kubectl rollout history deployment/mynginx
+
+
+9. Rollback
+kubectl rollout undo deployment/mynginx
+kubectl rollout status deployment/mynginx
+
+
+10. Clean up
+kubectl delete deployment mynginx
+kubectl delete service mynginx
+minikube stop
+minikube delete
+
+
+Kubernetes and Nagios (4).doc
+
+Q5. Nagios – Infrastructure and Application Monitoring
+1. Pull Nagios image
+docker pull jasonrivers/nagios:latest
+
+
+2. Run Nagios
+docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
+
+
+3. Open dashboard
+http://localhost:8888
+
+
+Login:
+Username: nagiosadmin
+Password: nagios
+
+
+4. Check container status and logs
+Open another CMD window:
+docker ps
+docker logs nagiosdemo
+docker logs -f nagiosdemo
+
+
+5. Dashboard sections to demonstrate
+- Hosts – host status (UP/DOWN).
+- Services – monitored services.
+- Alerts – notifications.
+- Host Information – host status and available metrics.
+6. Stop and remove Nagios
+docker stop nagiosdemo
+docker rm nagiosdemo
+docker images
+docker rmi jasonrivers/nagios:latest
+
+
+Important: Your Nagios lab manual provides the Docker setup and dashboard demonstration. It does not provide the actual configuration commands for adding custom CPU, memory, disk, HTTP and database checks or thresholds. Those require host/service configuration and suitable monitoring plugins.
+Kubernetes and Nagios (4).doc
+
+Q6. AWS – Cloud Deployment using EC2
+Extra focus
+The sample paper requires EC2, key pairs, security groups, SSH, Java, Maven, Tomcat, GitHub deployment, database connectivity and CloudWatch. Your uploaded AWS notes cover account creation but do not provide the full deployment commands below. These are practical Ubuntu EC2 steps to complete the SET-1 task.
+1. Create EC2 instance – AWS Console
+1. Open AWS Console → EC2 → Launch Instance.
+2. Choose Ubuntu Server.
+3. Select an instance type.
+4. Create/download a key pair (.pem file).
+5. Create a Security Group with these inbound rules:
+Type	Port	Source
+SSH	22	My IP
+HTTP	80	0.0.0.0/0
+Custom TCP	8080	0.0.0.0/0
+
+6. Launch the instance.
+7. Copy its Public IPv4 address.
+2. Connect to EC2 from Windows CMD
+Go to the folder containing your .pem file:
+ssh -i "your-key.pem" ubuntu@EC2_PUBLIC_IP
+
+
+Replace your-key.pem and EC2_PUBLIC_IP.
+3. Update Ubuntu and install Java, Maven, Git and Tomcat
+Run inside EC2:
+sudo apt update
+sudo apt upgrade -y
+
+
+sudo apt install openjdk-17-jdk maven git tomcat9 -y
+
+
+Check installations:
+java -version
+mvn -version
+git --version
+
+
+Start Tomcat:
+sudo systemctl start tomcat9
+sudo systemctl enable tomcat9
+sudo systemctl status tomcat9
+
+
+4. Clone GitHub repository
+git clone https://github.com/kvrajanirajesh/mid2-ecommercemaven.git
+
+
+Enter the project folder:
+cd mid2-ecommercemaven
+
+
+If the Maven project is inside mavenjava:
+cd mavenjava
+
+
+5. Build Java application using Maven
+mvn clean
+mvn compile
+mvn test
+mvn package
+
+
+Check generated WAR file:
+ls target
+
+
+6. Deploy WAR file to Tomcat
+sudo cp target/*.war /var/lib/tomcat9/webapps/
+
+
+Restart Tomcat:
+sudo systemctl restart tomcat9
+
+
+Check status:
+sudo systemctl status tomcat9
+
+
+7. Access application
+Open in browser:
+http://EC2_PUBLIC_IP:8080
+
+
+If the WAR file is named ecommerce.war, the application URL will usually be:
+http://EC2_PUBLIC_IP:8080/ecommerce
+
+
+8. Useful troubleshooting commands
+sudo systemctl status tomcat9
+sudo systemctl restart tomcat9
+sudo journalctl -u tomcat9 -f
+sudo ss -tulpn
+
+
+9. CloudWatch monitoring
+In AWS Console:
+1. Open CloudWatch.
+2. Select Metrics → EC2.
+3. Select the EC2 instance.
+4. View CPU Utilization and other available metrics.
+5. Create an alarm for high CPU utilization.
+For memory and disk metrics, install and configure the CloudWatch Agent. Attach the CloudWatchAgentServerPolicy IAM role to EC2 first.
+
+For an Ubuntu x86-64 instance, the agent package can be installed with:
+wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+
+
+The agent also needs a configuration file specifying the memory and disk metrics to collect.
+10. Database connectivity
+- Configure the application's database URL, username and password.
+- Ensure the database server is running and reachable from EC2.
+- Allow the database port only from the EC2 security group or trusted private network.
+- Do not expose the database publicly.
+SET-1(2).docx
+
+Extra Docker Compose commands (if asked)
+From your multi-container lab manual:
+docker compose up -d
+docker compose ps
+docker compose down
+docker compose up --build
+docker compose up -d --scale web=2
+
+
+Useful when running services from a docker-compose.yml file.
+Docker Compose, Multi Containerization (2).docx
+
+Final 1-minute command checklist
+Question	Commands you must remember
+Docker	docker pull, docker run, docker network create, docker volume create
+Docker recovery	docker stop, docker rm, docker volume ls, recreate with -v
+Jenkins	git clone, mvn clean, mvn compile, mvn test, mvn install, mvn package
+Webhooks	ngrok http 8080, git push origin main
+Kubernetes	minikube start, kubectl create deployment, kubectl expose, kubectl scale
+Kubernetes recovery	kubectl delete pod, kubectl rollout undo
+Nagios	docker pull, docker run, docker logs, docker stop
+AWS	ssh, apt install, git clone, mvn package, cp, systemctl restart
+
+Three things to avoid losing marks:
+1. Docker: use the same volume when recreating MySQL.
+2. Jenkins: configure the GitHub repository, Maven and build trigger correctly; a webhook needs a publicly reachable Jenkins URL.
+3. AWS: check the EC2 Security Group ports and make sure Tomcat is running before opening the public IP.
