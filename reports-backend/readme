@@ -212,3 +212,25 @@ kubectl get pods
 kubectl get services
 ```
 
+1. Pull Nagios image
+CMD:
+docker pull jasonrivers/nagios:latest
+
+
+2. Run Nagios
+docker run --name nagiosdemo -d -p 8888:80 jasonrivers/nagios:latest
+
+
+3. Open dashboard
+Browser:
+http://localhost:8888
+
+
+Login:
+Username: nagiosadmin
+Password: nagios
+
+
+4. Check Nagios container
+docker ps
+docker logs nagiosdemo
