@@ -1,0 +1,35 @@
+
+services:
+  web:
+    image: wordpress:latest
+    container_name: wp
+    ports:
+      - "8083:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql-db:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wp123
+      WORDPRESS_DB_NAME: wordpress
+    networks:
+      - app-net
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wp123
+    networks:
+      - app-net
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+networks:
+  app-net:
+
+volumes:
+  mysql-data:
