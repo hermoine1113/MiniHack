@@ -231,6 +231,121 @@ Username: nagiosadmin
 Password: nagios
 
 
+
+
+1. Open **AWS → EC2 → Launch Instance**.
+2. Name: `OnlineShopping`
+3. AMI: Ubuntu Server 22.04 LTS.
+4. Instance type: `t2.micro` (if available).
+5. Create and download a key pair.
+6. Configure Security Group inbound rules:
+
+| Type       | Port | Source                    |
+| ---------- | ---- | ------------------------- |
+| SSH        | 22   | My IP                     |
+| Custom TCP | 8080 | Anywhere IPv4 (0.0.0.0/0) |
+
+7. Launch the instance.
+8. Click **Connect → EC2 Instance Connect**.
+
+
+```
+sudo apt update
+
+sudo apt install openjdk-17-jdk maven git tomcat9 -y
+
+java -version
+mvn -version
+
+sudo systemctl start tomcat9
+sudo systemctl enable tomcat9
+sudo systemctl status tomcat9
+```
+
+## **Step 3: Clone GitHub repository**
+
+
+```
+git clone YOUR_GITHUB_REPOSITORY_URL
+
+cd OnlineShoppingApp
+```
+
+## **Step 4: Build Maven project**
+
+```
+mvn clean package
+
+ls target/
+```
+
+## **Step 5: Deploy application on Tomcat**
+
+```
+sudo cp target/*.war /var/lib/tomcat9/webapps/ROOT.war
+
+sudo systemctl restart tomcat9
+
+sudo systemctl status tomcat9
+```
+
+## **Step 6: Access application**
+
+Open your browser:
+
+```
+http://EC2-PUBLIC-IP:8080
+```
+
+Replace `EC2-PUBLIC-IP` with your EC2 instance's public IPv4 address.
+
+## **Step 7: Important commands for practical**
+
+```
+# Start Tomcat
+sudo systemctl start tomcat9
+
+# Stop Tomcat
+sudo systemctl stop tomcat9
+
+# Restart Tomcat
+sudo systemctl restart tomcat9
+
+# Check Tomcat status
+sudo systemctl status tomcat9
+
+# Check Tomcat logs
+sudo journalctl -u tomcat9 -f
+
+# Check deployed applications
+ls /var/lib/tomcat9/webapps/
+
+# Check Java version
+java -version
+
+# Check Maven version
+mvn -version
+
+# Check public IP
+curl ifconfig.me
+```
+
+## **Final sequence to remember**
+
+**EC2 Deployment**
+
+1. Launch Ubuntu EC2.
+2. Configure Security Group.
+3. Connect to EC2.
+4. Install Java, Maven, Git and Tomcat.
+5. Clone GitHub repository.
+6. Run `mvn clean package`.
+7. Copy WAR file to Tomcat.
+8. Restart Tomcat.
+9. Open EC2 public IP in browser.
+
+**Important:** These commands assume your project is compatible with Java 17 and Tomcat 9. If the WAR build fails, check the Java version configured in your `pom.xml`.
+
 4. Check Nagios container
 docker ps
 docker logs nagiosdemo
